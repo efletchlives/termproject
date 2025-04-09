@@ -1,0 +1,54 @@
+Train Location Memory:
+    steps per rotation *should* be 4096
+    A = 0 rotations, B = 3 rotations * steps per rotation, C = 6 rotations * steps per rotation
+
+Train Direction / Last Station Memory:
+    Last Station, LST: A = 0, B = 1, C = 2
+    Direction, DIR: forward = 0, backward = 1
+    Reserved, RES: unused
+
+    |  DIR   |  RES  |  RES  |  LST   |  LST  |
+    |   4    |   3   |   2   |   1    |   0   |
+
+
+Whenever moving train CW, increment step counter
+Whenever moving train CCW, decrement step counter
+
+// TODO: main function that simulates standard movement
+    - If last station = A
+        - go to station B
+    - If last station = B
+        - If direction = forward
+            - go to station C
+        - If direction = backward
+            - go to station C
+    - If last station = C
+        - go to station B
+
+// TODO: function to wait, open and close the doors when at a station
+
+// TODO: go to station A inturrupt
+    - recover current location (step counter)
+    - calculate number of steps to arrive at station A (will always be equal to step counter)
+    - move said number of steps to arrive at station A (will always be CCW)
+    - set location and direction to forward, A
+
+// TODO: go to station B inturrupt
+    - recover current location (step counter)
+    - if step counter < # steps to get to B:
+        - calculate # steps to arrive at B (# steps to get to B - step counter)
+        - move said number of steps to arrive at station B (will always be CW)
+    - if step counter > # number of steps to get to B:
+        - calculate # steps to arrive at B (step counter - # of steps to get to B)
+        - move said number of steps to arrive at station B (will always be CCW)
+    
+
+// TODO: go to station C inturrupt
+    - recover current location (step counter)
+    - calculate number of steps to arrive at station C (steps to get to C - step counter)
+    - move said number of steps to arrive at station C (will always be CW)
+    - set direction to backward
+
+// TODO: emergency push button inturrupt: stop all movement and blink red LED for 10s 
+
+
