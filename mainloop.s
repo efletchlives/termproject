@@ -521,7 +521,8 @@ EXTI2_IRQHandler PROC
 ;;Plan on using PB5(input) for Emergency Interrupt
 EXTI3_IRQHandler PROC
 
- PUSH{R2,R3,R6,R7}
+ ;;Pushing the LR as well to avoid bugs with the doors_open and doors_close functions
+ PUSH{R2,R3,R6,R7,LR}
 
     LDR r0,=EXTI_BASE
     LDR r1,[r0,ro,#EXTI_PR1]
@@ -535,12 +536,14 @@ EXTI3_IRQHandler PROC
     MOV r10, #1
     STR r10,[r0,#GPIO_ODR]
    
-    ;;THEN OPEN DOORS
-    BL doors_open ;;this will branch to doors open 
-    ;;evan has sequence to close the doors
+    ;;THEN OPEN AND CLOSE DOORS
+    BL doors_open 
+    POP{LR}
+
+    PUSH{LR}
     BL doors_close
 
- POP{R2,R3,R6,R7}
+   POP{R2,R3,R6,R7,LR}
 
  BX LR
 
