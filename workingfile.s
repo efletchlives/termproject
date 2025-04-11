@@ -80,40 +80,226 @@ __main	PROC
 	BIC r1, r1, #0x0000F000
 	BIC r1, r1, #0x000000F0
 	STR r1, [r0,#GPIO_PUPDR]
-
-
-
-;; config push buttons as interrupt to pull the train to the station A and reset the sequence of operations upon a button press (possible bonus option)
-
-;CONFIG FOR LED (gpio port d)
-
-
-;; list of available gpio ports: E,F,G,H
-
-;;;;;;;;;;;;;;;;; main code ;;;;;;;;;;;;;;;;;;;;
-
-; 3 switches on breadboard for pulling to stations A/B/C
-
-; register to store current destination and current location
-
+	
 	; initialize registers to start point
-	LDR r4, =0x0000 ; starting train location (station A)
-	LDR r5, =0x3000 ; train station destination (station B)
-	LDR r6, =0x0001 ; train direction (right)
-
+	MOV r4, #0x0000 ; starting train location (station A)
+	MOV r5, #0x0600 ; train station destination (station B) (3 rotations)
+	MOV r6, #0x0001 ; train direction (right)
+	
 main_loop ; while(1)
 
 	; compare train location and destination
 	;CMP r4, r5
 	;BNE check_dir
 
+    ;;;; go forward with train ;;;;
+	MOV r4, #0
+	MOV r5, #0x0600
+	BL backward
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
 	; initialize doors step counter to 0
-	MOV r8, #0x0000
-	; set door steps to 180 degrees (doors open)
-	MOV r9, #0x0400
+	;BIC r8, #0xFFFFFFFF
+	MOV r8, #0
+	; set door steps to 90 degrees (doors open)
+	;BIC r9, #0xFFFFFFFF
+	MOV r9, #0x0096
 	BL doors_open
+	
+	; long delay
+	BL long_delay
+	
+	; initialize doors step counter to 0
+	;BIC r8, #0xFFFFFFFF
+	MOV r8, #0
+	; set door steps to 90 degrees (doors open)
+	;BIC r9, #0xFFFFFFFF
+	MOV r9, #0x0096
+	BL doors_close
+	
+	BL long_delay
+	
+	
+	;;;;;;;;;;; backwards ;;;;;;;;;
+	MOV r4, #0
+	MOV r5, #0x0600
+    BL backward
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+
+	; initialize doors step counter to 0
+	;BIC r8, #0xFFFFFFFF
+	MOV r8, #0
+	; set door steps to 90 degrees (doors open)
+	;BIC r9, #0xFFFFFFFF
+	MOV r9, #0x0096
+	BL doors_open
+	
+	; long delay
+	BL long_delay
+	
+	; initialize doors step counter to 0
+	;BIC r8, #0xFFFFFFFF
+	MOV r8, #0
+	; set door steps to 90 degrees (doors open)
+	;BIC r9, #0xFFFFFFFF
+	MOV r9, #0x0096
+	BL doors_close
+	
+	BL long_delay
+	
 
     B main_loop
+
+
+
+; function to move stepper motor (forward)
+forward
+	PUSH {LR}
+loop3
+
+	;;;;;;;; temporary ;;;;;;;;;;
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000000
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	; step 1
+    LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000080
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 2
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000088
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 3
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000008
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 4
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000048
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 5
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000040
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 6
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000044
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 7
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000004
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 8
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000084
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	
+	ADD r4, #1 ; increment counter
+	
+	CMP r4, r5
+	BNE loop3
+	
+	POP {LR}
+	BX LR
+   
+
+backward
+	PUSH {LR}
+loop4	
+	; move cw	
+	; step 1
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000084
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 2
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000004
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 3
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000044
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 4
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000040
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 5
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000048
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 6
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000008
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 7
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000088
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 8
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000080
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	
+	ADD r4, #1
+	CMP r4,r5
+	BNE loop4
+	
+	POP{LR}
+	BX LR
 
 
 doors_open
@@ -177,13 +363,83 @@ loop5
 	STR r1, [r0, #GPIO_ODR]
 	BL delay
 	
-	ADD r4, #1 ; increment counter
+	ADD r8, #1 ; increment counter
 	
-	CMP r4, r5
+	CMP r8, r9
 	BNE loop5
 	
 	POP {LR}
 	BX LR
+
+
+doors_close
+	PUSH {LR}
+loop6	
+	; move cw
+	; step 1
+	LDR r0, =GPIOC_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000084
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 2
+	LDR r0, =GPIOC_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000004
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 3
+	LDR r0, =GPIOC_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000044
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 4
+	LDR r0, =GPIOC_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000040
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 5
+	LDR r0, =GPIOC_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000048
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 6
+	LDR r0, =GPIOC_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000008
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 7
+	LDR r0, =GPIOC_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000088
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	; step 8
+	LDR r0, =GPIOC_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x000000CC
+	ORR r1, r1, #0x00000080
+	STR r1, [r0, #GPIO_ODR]
+	BL delay
+	
+	ADD r8, #1
+	CMP r8,r9
+	BNE loop6
+	
+	POP{LR}
+	BX LR
+
 
 delay
     MOV r7, #0x708
@@ -192,4 +448,20 @@ delay_loop1
     BNE delay_loop1      ; continue loop
     BX LR               ; go back to where you were in the main function
 
-			
+long_delay
+    MOV r7, #0xFFFF
+delay_loop2
+    SUBS r7, #1
+    BNE delay_loop2      ; continue loop
+    BX LR               ; go back to where you were in the main function
+
+
+stop 	B 		stop     		; dead loop & program hangs here
+
+	ENDP
+								
+
+	AREA myData, DATA, READWRITE
+	ALIGN
+
+	END
