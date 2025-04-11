@@ -86,74 +86,54 @@ __main	PROC
 	MOV r5, #0x0600 ; train station destination (station B) (3 rotations)
 	MOV r6, #0x0001 ; train direction (right)
 	
-main_loop ; while(1)
-
-	; compare train location and destination
-	;CMP r4, r5
-	;BNE check_dir
-
-    ;;;; go forward with train ;;;;
-	MOV r4, #0
-	MOV r5, #0x0600
-	BL backward
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+main_loop   
+    CMP r4, r5
+    BNE check_dir
 	
-	; initialize doors step counter to 0
-	;BIC r8, #0xFFFFFFFF
+	;;;; doors sequence ;;;;
 	MOV r8, #0
-	; set door steps to 90 degrees (doors open)
-	;BIC r9, #0xFFFFFFFF
 	MOV r9, #0x0096
 	BL doors_open
 	
-	; long delay
-	BL long_delay
-	
-	; initialize doors step counter to 0
-	;BIC r8, #0xFFFFFFFF
 	MOV r8, #0
-	; set door steps to 90 degrees (doors open)
-	;BIC r9, #0xFFFFFFFF
 	MOV r9, #0x0096
 	BL doors_close
+	;;;; end doors ;;;;
 	
-	BL long_delay
-	
-	
-	;;;;;;;;;;; backwards ;;;;;;;;;
-	MOV r4, #0
-	MOV r5, #0x0600
-    BL backward
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	
+    ; station A
+    CMP r4, #0x0000             ; check if at station A
+        MOVEQ r5, #0x0600       ; set destination = B
+                                ; set 7-segment display to 11 (B)
+        BEQ main_loop           ; exit back to main loop
+    ; station B
+    CMP r4, #0x0600             ; check if at station B
+        CMPEQ r6, #1                ; if direction = forward
+            MOVEQ r5, #0x0C00           ; set destination = C
+                                        ; set 7-segment display to 12 (C)
+            BEQ main_loop               ; exit back to main loop
+        CMPNE r6, #0                  ; check if direction = backward
+            MOVNE r5, #0x0000         ; set destination = A
+                                      ; set 7-segment display to 10 (A)
+            BNE main_loop             ; go back to main loop
+    ; station C
+    CMP r4, #0x0C00             	; check if at station C
+        MOVEQ r5, #0x0600           ; set destination = B
+                                    ; set 7-segment display to 11 (B)
+        BEQ main_loop               ; exit back to main loop
 
-	; initialize doors step counter to 0
-	;BIC r8, #0xFFFFFFFF
-	MOV r8, #0
-	; set door steps to 90 degrees (doors open)
-	;BIC r9, #0xFFFFFFFF
-	MOV r9, #0x0096
-	BL doors_open
-	
-	; long delay
-	BL long_delay
-	
-	; initialize doors step counter to 0
-	;BIC r8, #0xFFFFFFFF
-	MOV r8, #0
-	; set door steps to 90 degrees (doors open)
-	;BIC r9, #0xFFFFFFFF
-	MOV r9, #0x0096
-	BL doors_close
-	
-	BL long_delay
-	
+    
+check_dir
+    CMP r4, r5
+                    ; if location < destination
+    MOVLE r6, #1        ; change direction to forward
+    BLLE forward        ; branch to forward (rotate one cycle forward)
+                    ; if location > destination
+    MOVGT r6, #0        ; change direction to backward
+    BLGT backward       ; branch to backward (rotate one cycle backward)
 
     B main_loop
 
 
-
-; function to move stepper motor (forward)
 forward
 	PUSH {LR}
 loop3
@@ -226,12 +206,8 @@ loop3
 	
 	ADD r4, #1 ; increment counter
 	
-	CMP r4, r5
-	BNE loop3
-	
 	POP {LR}
 	BX LR
-   
 
 backward
 	PUSH {LR}
@@ -294,9 +270,7 @@ loop4
 	STR r1, [r0, #GPIO_ODR]
 	BL delay
 	
-	ADD r4, #1
-	CMP r4,r5
-	BNE loop4
+	SUBS r4, #1
 	
 	POP{LR}
 	BX LR
@@ -441,6 +415,7 @@ loop6
 	BX LR
 
 
+
 delay
     MOV r7, #0x708
 delay_loop1
@@ -454,6 +429,8 @@ delay_loop2
     SUBS r7, #1
     BNE delay_loop2      ; continue loop
     BX LR               ; go back to where you were in the main function
+
+
 
 
 stop 	B 		stop     		; dead loop & program hangs here
