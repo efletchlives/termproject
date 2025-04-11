@@ -1,54 +1,75 @@
-Train Location Memory:
-    steps per rotation *should* be 4096
-    A = 0 rotations, B = 3 rotations * steps per rotation, C = 6 rotations * steps per rotation
 
-Train Direction / Last Station Memory:
-    Last Station, LST: A = 0, B = 1, C = 2
-    Direction, DIR: forward = 0, backward = 1
-    Reserved, RES: unused
+Station Locations (in steps):
+    A = 0 (0x0000)
+    B = 12288
+    C = 24576
 
-    |  DIR   |  RES  |  RES  |  LST   |  LST  |
-    |   4    |   3   |   2   |   1    |   0   |
-
-
+// already handled through lab 5 code
 Whenever moving train CW, increment step counter
 Whenever moving train CCW, decrement step counter
 
 // TODO: main function that simulates standard movement
-    - If last station = A
-        - go to station B
-    - If last station = B
-        - If direction = forward
-            - go to station C
-        - If direction = backward
-            - go to station C
-    - If last station = C
-        - go to station B
+     while (1) {
+        if (location == destination) {
+            doors();
+            switch(location) {
+                case A:
+                    destination = B;
+                    break;
+                case B:
+                    if(dir = forward) {
+                        destination = C;
+                        break;
+                    }
+                    else {
+                        destination = A;
+                        break;
+                    }
+                case C:
+                    destination = B;
+                    break;
+            }
+        } else {
+            if (location < destination) {
+                direction = right;
+                forward(); (one 8-step cycle)
+            } else {
+                direction = left;
+                backward(); (one 8-step cycle)
+            }
+        }
+    }
 
-// TODO: function to wait, open and close the doors when at a station
+interrupts change destination and direction
+
+register handling:
+r0-r3 - local, no need to preserve
+r4  - step counter for train location (current train location, in steps)
+r5  - train station destination (in steps)
+r6  - train direction (1 for forward, 0 for backward)
+r7  - delay register for stepper motors (0x600 for short, 0xFFFF for long)
+r8  - step counter for doors
+r9  - doors open/close destination (0x1800)
+r10 - 
+r11 - LED light for System error implementation 
+7 Segment delay will show the upcoming delay
+
+// TODO: moveTrain() - function to move train
+
+// TODO: doors() - function to wait, open and close the doors when at a station
 
 // TODO: go to station A inturrupt
-    - recover current location (step counter)
-    - calculate number of steps to arrive at station A (will always be equal to step counter)
-    - move said number of steps to arrive at station A (will always be CCW)
-    - set location and direction to forward, A
+    - set destination to A
 
 // TODO: go to station B inturrupt
-    - recover current location (step counter)
-    - if step counter < # steps to get to B:
-        - calculate # steps to arrive at B (# steps to get to B - step counter)
-        - move said number of steps to arrive at station B (will always be CW)
-    - if step counter > # number of steps to get to B:
-        - calculate # steps to arrive at B (step counter - # of steps to get to B)
-        - move said number of steps to arrive at station B (will always be CCW)
-    
+    - set destination to B
 
 // TODO: go to station C inturrupt
-    - recover current location (step counter)
-    - calculate number of steps to arrive at station C (steps to get to C - step counter)
-    - move said number of steps to arrive at station C (will always be CW)
-    - set direction to backward
+    - set destination to C
 
-// TODO: emergency push button inturrupt: stop all movement and blink red LED for 10s 
+// TODO: emergency push button interrupt: stop all movement and blink red LED for 10s 
+    - stop Train motion i.e Massive delay;
+    - blink red LED
+
 
 
