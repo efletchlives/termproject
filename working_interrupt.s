@@ -7,7 +7,7 @@
 
 ;;Interrupt for Station A
 ;;Plan on using PB1(input) for A interrupt
-EXTI0_IRQHandler 
+EXTI1_IRQHandler 
 
  PUSH{R2,R3,R6,R7,LR}
 
@@ -21,7 +21,7 @@ EXTI0_IRQHandler
 
  ;;Interrupt for Station B
  ;;Plan on using PB3(input) for B interrupt
-EXTI1_IRQHandler:
+EXTI3_IRQHandler:
 
  PUSH{R2,R3,R6,R7,LR}
 
@@ -35,7 +35,7 @@ EXTI1_IRQHandler:
 
  ;;Interrupt for Station C
  ;;Plan on using PB4(input) for C interrupt
-EXTI2_IRQHandler:
+EXTI4_IRQHandler:
 
  PUSH{R2,R3,R6,R7,LR}
     
@@ -49,7 +49,7 @@ EXTI2_IRQHandler:
     
 ;;Interrupt for the emergency stop 
 ;;Plan on using PB5(input) for Emergency Interrupt
-EXTI3_IRQHandler:
+EXTI5_IRQHandler:
 
  PUSH{R2,R3,R6,R7,LR}
 
