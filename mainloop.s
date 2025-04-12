@@ -112,7 +112,99 @@ __main	PROC
 
 ;;Initialization of Interrupts
 
-    
+    	PUSH{LR,R0}
+     	BL config_NVIC_in_C
+      	POP{LR,R0}
+
+	;;Initializing Interrupt 1(STATION A)
+       LDR r0,=RCC_BASE
+       LDR r1,[r0,#RCC_AHB2ENR]
+       ORR r1,r1,#RCC_APB2ENR_SYSCFGEN
+       STR r1,[r0,#RCC_AHB2ENR]
+
+       LDR r0,=SYSCFG_BASE
+       LDR r1,[r0,#SYSCFG_EXTICR0]
+       BIC r1,#SYSCFG_EXTICR1_EXTI1
+       ORR r1,#SYSCFG_EXTICR1_EXTI1_PB
+       STR r1,[r0, # SYSCFG_EXTICR0]
+	
+       LDR r0,=EXTI_BASE
+       LDR r1,[r0,#EXTI,RTSR1]
+       ORR r1,#EXTI_RTSR1_RT1 ;;Setting it to trigger on rising edge
+       STR r1,[r0,#EXTI_RTSR1]
+
+       LDR r0,=EXTI_BASE
+       LDR r1,[r0,#EXTI_IMR1]
+       ORR r1, #EXTI_IMR1_IM1
+       STR r1,[r0,#EXTI_IMR1]
+
+       ;;Initializing Interrupt 3(STATION B)
+        LDR r0,=RCC_BASE
+       LDR r1,[r0,#RCC_AHB2ENR]
+       ORR r1,r1,#RCC_APB2ENR_SYSCFGEN
+       STR r1,[r0,#RCC_AHB2ENR]
+
+       LDR r0,=SYSCFG_BASE
+       LDR r1,[r0,#SYSCFG_EXTICR0]
+       BIC r1,#SYSCFG_EXTICR1_EXTI3
+       ORR r1,#SYSCFG_EXTICR1_EXTI3_PB
+       STR r1,[r0, # SYSCFG_EXTICR0]
+	
+       LDR r0,=EXTI_BASE
+       LDR r1,[r0,#EXTI,RTSR1]
+       ORR r1,#EXTI_RTSR1_RT3 ;;Setting it to trigger on rising edge
+       STR r1,[r0,#EXTI_RTSR1]
+
+       LDR r0,=EXTI_BASE
+       LDR r1,[r0,#EXTI_IMR1]
+       ORR r1, #EXTI_IMR1_IM3
+       STR r1,[r0,#EXTI_IMR1]
+
+       ;;Initializing Interrup 4(STATION C)
+        LDR r0,=RCC_BASE
+       LDR r1,[r0,#RCC_AHB2ENR]
+       ORR r1,r1,#RCC_APB2ENR_SYSCFGEN
+       STR r1,[r0,#RCC_AHB2ENR]
+
+       LDR r0,=SYSCFG_BASE
+       LDR r1,[r0,#SYSCFG_EXTICR0]
+       BIC r1,#SYSCFG_EXTICR1_EXTI4
+       ORR r1,#SYSCFG_EXTICR1_EXTI4_PB
+       STR r1,[r0, # SYSCFG_EXTICR0]
+	
+       LDR r0,=EXTI_BASE
+       LDR r1,[r0,#EXTI,RTSR1]
+       ORR r1,#EXTI_RTSR1_RT4 ;;Setting it to trigger on rising edge
+       STR r1,[r0,#EXTI_RTSR1]
+
+       LDR r0,=EXTI_BASE
+       LDR r1,[r0,#EXTI_IMR1]
+       ORR r1, #EXTI_IMR1_IM4
+       STR r1,[r0,#EXTI_IMR1]
+
+       ;;Initializing Interrup 5(Emergency Button Interrupt)
+        LDR r0,=RCC_BASE
+       LDR r1,[r0,#RCC_AHB2ENR]
+       ORR r1,r1,#RCC_APB2ENR_SYSCFGEN
+       STR r1,[r0,#RCC_AHB2ENR]
+
+       LDR r0,=SYSCFG_BASE
+       LDR r1,[r0,#SYSCFG_EXTICR0]
+       BIC r1,#SYSCFG_EXTICR1_EXTI5
+       ORR r1,#SYSCFG_EXTICR1_EXTI5_PB
+       STR r1,[r0, # SYSCFG_EXTICR0]
+	
+       LDR r0,=EXTI_BASE
+       LDR r1,[r0,#EXTI,RTSR1]
+       ORR r1,#EXTI_RTSR1_RT5 ;;Setting it to trigger on rising edge
+       STR r1,[r0,#EXTI_RTSR1]
+
+       LDR r0,=EXTI_BASE
+       LDR r1,[r0,#EXTI_IMR1]
+       ORR r1, #EXTI_IMR1_IM5
+       STR r1,[r0,#EXTI_IMR1]
+
+       
 
 ;; config push buttons as interrupt to pull the train to the station A and reset the sequence of operations upon a button press (possible bonus option)
 
@@ -450,7 +542,7 @@ loop6
 	BX LR
 
 ;;;;;;;;;;;;;;;;;;;;;INTERRUPTS;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-EXTI0_IRQHandler PROC 
+EXTI1_IRQHandler PROC 
 
  PUSH{R2,R3,R6,R7}
     ;;Initializing the interrupt
@@ -473,7 +565,7 @@ EXTI0_IRQHandler PROC
 
  ;;Interrupt for Station B
  ;;Plan on using PB3(input) for B interrupt
-EXTI1_IRQHandler PROC
+EXTI3_IRQHandler PROC
 
  PUSH{R2,R3,R6,R7}
 
@@ -495,7 +587,7 @@ end1
 
  ;;Interrupt for Station C
  ;;Plan on using PB4(input) for C interrupt
-EXTI2_IRQHandler PROC
+EXTI4_IRQHandler PROC
 
  PUSH{R2,R3,R6,R7}
     
@@ -519,7 +611,7 @@ EXTI2_IRQHandler PROC
     
 ;;Interrupt for the emergency stop 
 ;;Plan on using PB5(input) for Emergency Interrupt
-EXTI3_IRQHandler PROC
+EXTI5_IRQHandler PROC
 
  ;;Pushing the LR as well to avoid bugs with the doors_open and doors_close functions
  PUSH{R2,R3,R6,R7,LR}
