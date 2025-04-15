@@ -1,3 +1,18 @@
+;******************** (C) Yifeng ZHU *******************************************
+; @file    main.s
+; @author  Yifeng Zhu
+; @date    May-17-2015
+; @note
+;           This code is for the book "Embedded Systems with ARM Cortex-M 
+;           Microcontrollers in Assembly Language and C, Yifeng Zhu, 
+;           ISBN-13: 978-0982692639, ISBN-10: 0982692633
+; @attension
+;           This code is provided for education purpose. The author shall not be 
+;           held liable for any direct, indirect or consequential damages, for any 
+;           reason whatever. More information can be found from book website: 
+;           http:;www.eece.maine.edu/~zhu/book
+;*******************************************************************************
+
 
 	INCLUDE core_cm4_constants.s		; Load Constant Definitions
 	INCLUDE stm32l476xx_constants.s      
@@ -12,7 +27,7 @@
 				
 __main	PROC
 	
-;;;;;;;;;;;;;;;;;;; initialize ;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;; initialize ;;;;;;;;;;;;;;;;;;;;;;;
 
 	;; enable clocks for gpio ports used
 	;; format (add all gpio ports):
@@ -21,7 +36,7 @@ __main	PROC
 	LDR r1, [r0, #RCC_AHB2ENR] ; load AHB2ENR register to enable clocks for GPIOA/B/C
 	ORR r1, r1, #0x00000007 ; GPIOA/B/C (add others here)
 	STR r1, [r0,#RCC_AHB2ENR] ; store into RCC with clocks for GPIOA/B/C turned on
-
+	LTORG
 
 	;;;; config stepper motor (train motor) to gpioa ;;;;
 
@@ -33,6 +48,7 @@ __main	PROC
 	ORR r1, r1, #0x00005000 ; set moder for pins 2,3,6,7 (moder pins: 4,6,12,14) to output ('01')
 	ORR r1, r1, #0x00000050
 	STR r1, [r0,#GPIO_MODER] ; store moder to set pins 2,3,6,7
+	LTORG
 	
 	; otyper for output
 	LDR r0, =GPIOA_BASE
@@ -58,32 +74,41 @@ __main	PROC
 	BIC r1,r1,#0x00000030
 	ORR r1,r1,#0x00000010
 	STR r1,[r0,#GPIO_MODER]
+	LTORG ;Fixes the issue of the literal pools being too far away from each other
+ 	;LTORG assembles it to be within 4KB
 
 	;;Select push-pull output
 	LDR r0,=GPIOB_BASE
 	LDR r1,[r0,#GPIO_OTYPER]
 	BIC r1,r1,#0x00000004
 	STR r1,[r0,#GPIO_OTYPER]
+	LTORG
 
 	;;Output 1 to turn on red LED
 	LDR r0,=GPIOB_BASE
 	LDR r1,[r0,#GPIO_ODR]
 	ORR r1,r1,#0x00000004
 	STR r1,[r0,#GPIO_ODR]
+	LTORG
+	
 
 ;; Set GPIOB PIN 1(PB1),PIN 3(PB3), PIN 4(PB4), and PIN 5(PB5) for Station A,B,C, and emergency button interrupt
 
 	;;Set PB1,PB3,PB4,PB5 as Input
 	LDR r0,=GPIOB_BASE
 	LDR r1,[r0,#GPIO_MODER]
-	BIC r1,r1,#0x00000F77 ;;Masking
+	BIC r1,r1,#0x00000F00 ;;Masking
+	BIC r1,r1,#0x00000077
 	STR r1,[r0,#GPIO_MODER]
+	LTORG
 
 	;;Set PB1,PB3,PB4,PB5 as NoPullUp,Pull-Down
 	LDR r0,=GPIOB_BASE
 	LDR r1,[r0,#GPIO_PUPDR]
-	BIC r1,r1,#0x00000F77 
+	BIC r1,r1,#0x00000F00
+    BIC r1,r1,#0x00000077
 	STR r1,[r0,#GPIO_PUPDR]
+	LTORG
 
 	;;;; config stepper motor (train doors) to gpioc ;;;;
     
@@ -95,13 +120,14 @@ __main	PROC
 	ORR r1, r1, #0x00005000 ; set moder for pins 2,3,6,7 (moder pins: 4,6,12,14) to output ('01')
 	ORR r1, r1, #0x00000050
 	STR r1, [r0,#GPIO_MODER] ; store moder to set pins 2,3,6,7
-	
+	LTORG
 	; otyper for output
 	LDR r0, =GPIOC_BASE
 	LDR r1, [r0,#GPIO_OTYPER]
 	BIC r1, r1, #0x0000F000
 	BIC r1, r1, #0x000000F0
 	STR r1, [r0,#GPIO_OTYPER]
+	LTORG
 	
 	; pupdr for output
 	LDR r0, =GPIOC_BASE
@@ -109,71 +135,78 @@ __main	PROC
 	BIC r1, r1, #0x0000F000
 	BIC r1, r1, #0x000000F0
 	STR r1, [r0,#GPIO_PUPDR]
+	LTORG
 
 ;;Initialization of Interrupts
 
-    	PUSH{LR,R0}
-     	BL config_NVIC_in_C
-      	POP{LR,R0}
+    	MOVS r0, #0
+		MSR FAULTMASK , r0
 
 	;;Initializing Interrupt 1(STATION A)
        LDR r0,=RCC_BASE
        LDR r1,[r0,#RCC_AHB2ENR]
        ORR r1,r1,#RCC_APB2ENR_SYSCFGEN
        STR r1,[r0,#RCC_AHB2ENR]
+	   LTORG
 
        LDR r0,=SYSCFG_BASE
        LDR r1,[r0,#SYSCFG_EXTICR0]
        BIC r1,#SYSCFG_EXTICR1_EXTI1
        ORR r1,#SYSCFG_EXTICR1_EXTI1_PB
-       STR r1,[r0, # SYSCFG_EXTICR0]
+       STR r1,[r0,#SYSCFG_EXTICR0]
+	   LTORG
 	
        LDR r0,=EXTI_BASE
-       LDR r1,[r0,#EXTI,RTSR1]
+       LDR r1,[r0,#EXTI_RTSR1]
        ORR r1,#EXTI_RTSR1_RT1 ;;Setting it to trigger on rising edge
        STR r1,[r0,#EXTI_RTSR1]
+	   LTORG
 
        LDR r0,=EXTI_BASE
        LDR r1,[r0,#EXTI_IMR1]
        ORR r1, #EXTI_IMR1_IM1
        STR r1,[r0,#EXTI_IMR1]
+	   LTORG
 
        ;;Initializing Interrupt 3(STATION B)
         LDR r0,=RCC_BASE
        LDR r1,[r0,#RCC_AHB2ENR]
        ORR r1,r1,#RCC_APB2ENR_SYSCFGEN
        STR r1,[r0,#RCC_AHB2ENR]
-
+		LTORG
        LDR r0,=SYSCFG_BASE
        LDR r1,[r0,#SYSCFG_EXTICR0]
        BIC r1,#SYSCFG_EXTICR1_EXTI3
        ORR r1,#SYSCFG_EXTICR1_EXTI3_PB
        STR r1,[r0, # SYSCFG_EXTICR0]
+	   LTORG
 	
        LDR r0,=EXTI_BASE
-       LDR r1,[r0,#EXTI,RTSR1]
+       LDR r1,[r0,#EXTI_RTSR1]
        ORR r1,#EXTI_RTSR1_RT3 ;;Setting it to trigger on rising edge
        STR r1,[r0,#EXTI_RTSR1]
+	   LTORG
 
        LDR r0,=EXTI_BASE
        LDR r1,[r0,#EXTI_IMR1]
        ORR r1, #EXTI_IMR1_IM3
        STR r1,[r0,#EXTI_IMR1]
-
+		LTORG
        ;;Initializing Interrup 4(STATION C)
         LDR r0,=RCC_BASE
        LDR r1,[r0,#RCC_AHB2ENR]
        ORR r1,r1,#RCC_APB2ENR_SYSCFGEN
        STR r1,[r0,#RCC_AHB2ENR]
+	   LTORG
 
        LDR r0,=SYSCFG_BASE
-       LDR r1,[r0,#SYSCFG_EXTICR0]
-       BIC r1,#SYSCFG_EXTICR1_EXTI4
-       ORR r1,#SYSCFG_EXTICR1_EXTI4_PB
-       STR r1,[r0, # SYSCFG_EXTICR0]
+       LDR r1,[r0,#SYSCFG_EXTICR2]
+       BIC r1,#SYSCFG_EXTICR2_EXTI4
+       ORR r1,#SYSCFG_EXTICR2_EXTI4_PB
+       STR r1,[r0, # SYSCFG_EXTICR2]
 	
        LDR r0,=EXTI_BASE
-       LDR r1,[r0,#EXTI,RTSR1]
+       LDR r1,[r0,#EXTI_RTSR1]
        ORR r1,#EXTI_RTSR1_RT4 ;;Setting it to trigger on rising edge
        STR r1,[r0,#EXTI_RTSR1]
 
@@ -182,20 +215,20 @@ __main	PROC
        ORR r1, #EXTI_IMR1_IM4
        STR r1,[r0,#EXTI_IMR1]
 
-       ;;Initializing Interrup 5(Emergency Button Interrupt)
+       ;;Initializing Interrupt 5(Emergency Button Interrupt)
         LDR r0,=RCC_BASE
        LDR r1,[r0,#RCC_AHB2ENR]
        ORR r1,r1,#RCC_APB2ENR_SYSCFGEN
        STR r1,[r0,#RCC_AHB2ENR]
 
        LDR r0,=SYSCFG_BASE
-       LDR r1,[r0,#SYSCFG_EXTICR0]
-       BIC r1,#SYSCFG_EXTICR1_EXTI5
-       ORR r1,#SYSCFG_EXTICR1_EXTI5_PB
-       STR r1,[r0, # SYSCFG_EXTICR0]
+       LDR r1,[r0,#SYSCFG_EXTICR2]
+       BIC r1,#SYSCFG_EXTICR2_EXTI5
+       ORR r1,#SYSCFG_EXTICR2_EXTI5_PB
+       STR r1,[r0, # SYSCFG_EXTICR2]
 	
        LDR r0,=EXTI_BASE
-       LDR r1,[r0,#EXTI,RTSR1]
+       LDR r1,[r0,#EXTI_RTSR1]
        ORR r1,#EXTI_RTSR1_RT5 ;;Setting it to trigger on rising edge
        STR r1,[r0,#EXTI_RTSR1]
 
@@ -544,45 +577,54 @@ loop6
 ;;;;;;;;;;;;;;;;;;;;;INTERRUPTS;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 EXTI1_IRQHandler PROC 
 
- PUSH{R2,R3,R6,R7}
+    PUSH{R2,R3,R6,R7}
     ;;Initializing the interrupt
+	;;Also serves as a safety check; makes sure that the interrupt that was pressed is the correct one
     LDR r0,=EXTI_BASE
-    LDR r1,[r0,ro,#EXTI_PR1]
-    AND r1,#EXTI_PR1_PIF0
-    CMP r1,#EXTI_PRI_PIF0
-    BNE end0
+    LDR r1,[r0,#EXTI_PR1]
+    AND r1,r1,#EXTI_PR1_PIF1
+    CMP r1,#0
+    BNE stop
     ;;Set R5 to Destination A
 
     MOV R5, #0x0000 ; 0x0000 is the starting location
-
- POP{R2,R3,R6,R7}
-
- BX LR
-
- end0
-    ENDP
-
-
+	
+	;;Clearing the Interrupt by writing to 1
+	
+	LDR r0, =EXTI_BASE
+	LDR r1,[r0,#EXTI_PR1]
+	ORR r1, #EXTI_PR1_PIF1
+	STR r1,[r0,#EXTI_PR1]
+	
+	POP{R2,R3,R6,R7}
+	BX LR 	
+	
+	ENDP
+	
  ;;Interrupt for Station B
  ;;Plan on using PB3(input) for B interrupt
 EXTI3_IRQHandler PROC
 
- PUSH{R2,R3,R6,R7}
-
+    PUSH{R2,R3,R6,R7}
+	;;Initializing the interrupt
+	;;Adding a safety check to this interrupt
     LDR r0,=EXTI_BASE
-    LDR r1,[r0,ro,#EXTI_PR1]
-    AND r1,#EXTI_PR1_PIF1
-    CMP r1,#EXTI_PRI_PIF1
-    BNE end1
-   ;;Set R5 to Destination B
+    LDR r1,[r0,#EXTI_PR1]
+    AND r1,r1,#EXTI_PR1_PIF3
+    CMP r1,#0
+    BNE stop
+   
+	;;Set R5 to Destination B
 
-   MOV R5, #0x0600
+    MOV R5, #0x0600
 
- POP{R2,R3,R6,R7}
-
- BX LR
-
-end1
+	LDR r0, =EXTI_BASE
+	LDR r1,[r0,#EXTI_PR1]
+	ORR r1, #EXTI_PR1_PIF3
+	STR r1,[r0,#EXTI_PR1]
+	
+	POP{R2,R3,R6,R7}
+	BX LR 
     ENDP
 
  ;;Interrupt for Station C
@@ -592,22 +634,23 @@ EXTI4_IRQHandler PROC
  PUSH{R2,R3,R6,R7}
     
     LDR r0,=EXTI_BASE
-    LDR r1,[r0,ro,#EXTI_PR1]
-    AND r1,#EXTI_PR1_PIF2
-    CMP r1,#EXTI_PRI_PIF2
-    BNE end2
+    LDR r1,[r0,#EXTI_PR1]
+    AND r1,r1,#EXTI_PR1_PIF4
+    CMP r1,#0
+    BNE stop
     
     ;;Set R5 to Destination C 
     
     MOV R5, #0x0C00
-
- POP{R2,R3,R6,R7}
-
- BX LR
-
- end2
-    ENDP
-
+	
+	LDR r0,=EXTI_BASE
+	LDR r1,[r0,#EXTI_PR1]
+	ORR r1,#EXTI_PR1_PIF4
+	STR r1,[r0,#EXTI_PR1]
+	
+	POP{R2,R3,R6,R7}
+	BX LR
+	ENDP
     
 ;;Interrupt for the emergency stop 
 ;;Plan on using PB5(input) for Emergency Interrupt
@@ -617,10 +660,10 @@ EXTI5_IRQHandler PROC
  PUSH{R2,R3,R6,R7,LR}
 
     LDR r0,=EXTI_BASE
-    LDR r1,[r0,ro,#EXTI_PR1]
-    AND r1,#EXTI_PR1_PIF3
-    CMP r1,#EXTI_PRI_PIF3
-    BNE end3
+    LDR r1,[r0,#EXTI_PR1]
+    AND r1,r1,#EXTI_PR1_PIF5
+    CMP r1,#0
+    BNE stop
 
     ;;Turn LED ON FIRST
     LDR r0, =GPIOB_BASE
@@ -634,13 +677,19 @@ EXTI5_IRQHandler PROC
 
     PUSH{LR}
     BL doors_close
+	
+	
+	LDR r0,=EXTI_BASE
+	LDR r1,[r0,#EXTI_PR1]
+	ORR r1,#EXTI_PR1_PIF5
+	STR r1,[r0,#EXTI_PR1]
+	
 
-   POP{R2,R3,R6,R7,LR}
+    POP{R2,R3,R6,R7,LR}
+	BX LR
+	
+	ENDP
 
- BX LR
-
- end3 
-    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;END INTERRUPTS;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delay
