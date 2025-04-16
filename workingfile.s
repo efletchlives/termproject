@@ -14,6 +14,11 @@ __main	PROC
 	
 ;;;;;;;;;;;;;;;;;;; initialize ;;;;;;;;;;;;;;;;;;;;;;;
 
+	;; for tera term display ;;
+	; these 2 lines cause issues
+	;BL System_Clock_Init
+	;BL UART2_Init      
+	
 	;; enable clocks for gpio ports used
 	;; format (add all gpio ports):
 	;	Enable clocks for GPIOA, GPIOB,GPIOC //;	Enable clocks for GPIOA, GPIOB
@@ -133,7 +138,7 @@ __main	PROC
 	BIC r1, r1, #0x00000F00
 	ORR r1, r1, #0x00000200
 	STR r1, [r0, #GPIO_ODR]
-	LTORG
+	
 	
 	; initialize registers to start point
 	MOV r4, #0x0000 ; starting train location (station A)
@@ -161,34 +166,38 @@ main_loop
     ; station A
     CMP r4, #0x0000             ; check if at station A
     MOVEQ r5, #0x0600       	; set destination = B
+	BEQ station_a
 	
-    ; set 7 segment display to B (2)
+    ; station B
+    CMP r4, #0x0600             ; check if at station B
+	BEQ b_direction				; if at station B, branch to check direction
+	
+	; station C
+	B station_c					; go to station C check
+
+station_a
+	PUSH {LR}
+
+	; set 7 segment display to B (2)
 	LDR r0, =GPIOC_BASE
 	LDR r1, [r0, #GPIO_ODR]
 	BIC r1, r1, #0x00000F00
 	ORR r1, r1, #0x00000200
 	STR r1, [r0, #GPIO_ODR]
+	LTORG
 	
-	BEQ main_loop           	; exit back to main loop
+	; display B to tera term
+	MOV r0, #66
+	MOV r1, #1
+	BL USART2_Write
 	
-    ; station B
-    CMP r4, #0x0600             ; check if at station B
-	BEQ b_direction				; if at station B, branch to check direction
-	B station_c					; go to station C check
-	
+	B main_loop
+
 b_direction
 	; go to station C
     CMP	  r6, #1                ; if direction = forward
     MOVEQ r5, #0x0C00           ; set destination = C
-
-	; set 7 segment display to C (3)
-	LDR r0, =GPIOC_BASE
-	LDR r1, [r0, #GPIO_ODR]
-	BIC r1, r1, #0x00000F00
-	ORR r1, r1, #0x00000300
-	STR r1, [r0, #GPIO_ODR]
-	
-    BEQ main_loop               ; exit back to main loop
+	BEQ next_station_c
 	
 	; go to station A
     CMP   r6, #0                ; check if direction = backward
@@ -201,8 +210,29 @@ b_direction
 	ORR r1, r1, #0x00000100
 	STR r1, [r0, #GPIO_ODR]
 	
-    BEQ main_loop             	; go back to main loop
+	; display A to tera term
+	MOV r0, #65
+	MOV r1, #1
+	BL USART2_Write
 	
+    BEQ main_loop             	; go back to main loop
+
+next_station_c
+	
+	; set 7 segment display to C (3)
+	LDR r0, =GPIOC_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	BIC r1, r1, #0x00000F00
+	ORR r1, r1, #0x00000300
+	STR r1, [r0, #GPIO_ODR]
+
+	; display C to tera term
+	MOV r0, #67
+	MOV r1, #1
+	BL USART2_Write
+	
+	B main_loop
+
 station_c
     ; station C
     CMP r4, #0x0C00             	; check if at station C
@@ -214,6 +244,11 @@ station_c
 	BIC r1, r1, #0x00000F00
 	ORR r1, r1, #0x00000200
 	STR r1, [r0, #GPIO_ODR]
+	
+	; display B to tera term
+	MOV r0, #66
+	MOV r1, #1
+	BL USART2_Write
 	
     BEQ main_loop               ; exit back to main loop
 
