@@ -152,7 +152,6 @@ __main	PROC
 main_loop   
     CMP r4, r5
     BNE check_dir
-	
 	;;;; doors sequence ;;;;
 	MOV r8, #0
 	MOV r9, #0x0096
@@ -194,15 +193,15 @@ station_a
 	B main_loop
 
 b_direction
-	; go to station C
-    CMP	  r6, #1                ; if direction = forward
-    MOVEQ r5, #0x0C00           ; set destination = C
-	BEQ next_station_c
 	
 	; go to station A
-    CMP   r6, #0                ; check if direction = backward
-    MOVEQ r5, #0x0000         	; set destination = A
+    CMP r6, #0x0000           ; check if direction = backward
+	BEQ next_station_a			
+	BNE next_station_c			; branch to station C code
+	
+next_station_a
 
+	MOV r5, #0x0000 			; set destination = A
 	; set 7 segment display to A (1)
 	LDR r0, =GPIOC_BASE
 	LDR r1, [r0, #GPIO_ODR]
@@ -215,10 +214,11 @@ b_direction
 	MOV r1, #1
 	BL USART2_Write
 	
-    BEQ main_loop             	; go back to main loop
+	B main_loop
 
 next_station_c
-	
+
+	MOV r5, #0x0C00			; set destination = C
 	; set 7 segment display to C (3)
 	LDR r0, =GPIOC_BASE
 	LDR r1, [r0, #GPIO_ODR]
@@ -281,7 +281,7 @@ loop3
 	BIC r1, r1, #0x000000CC
 	ORR r1, r1, #0x00000000
 	STR r1, [r0, #GPIO_ODR]
-	BL delay
+	BL delay_check
 	;;;;;;;;;;;;;;;;;;;;;;;;
 	
 	; step 1
@@ -290,49 +290,49 @@ loop3
 	BIC r1, r1, #0x000000CC
 	ORR r1, r1, #0x00000080
 	STR r1, [r0, #GPIO_ODR]
-	BL delay
+	BL delay_check
 	; step 2
 	LDR r0, =GPIOA_BASE
 	LDR r1, [r0, #GPIO_ODR]
 	BIC r1, r1, #0x000000CC
 	ORR r1, r1, #0x00000088
 	STR r1, [r0, #GPIO_ODR]
-	BL delay
+	BL delay_check
 	; step 3
 	LDR r0, =GPIOA_BASE
 	LDR r1, [r0, #GPIO_ODR]
 	BIC r1, r1, #0x000000CC
 	ORR r1, r1, #0x00000008
 	STR r1, [r0, #GPIO_ODR]
-	BL delay
+	BL delay_check
 	; step 4
 	LDR r0, =GPIOA_BASE
 	LDR r1, [r0, #GPIO_ODR]
 	BIC r1, r1, #0x000000CC
 	ORR r1, r1, #0x00000048
 	STR r1, [r0, #GPIO_ODR]
-	BL delay
+	BL delay_check
 	; step 5
 	LDR r0, =GPIOA_BASE
 	LDR r1, [r0, #GPIO_ODR]
 	BIC r1, r1, #0x000000CC
 	ORR r1, r1, #0x00000040
 	STR r1, [r0, #GPIO_ODR]
-	BL delay
+	BL delay_check
 	; step 6
 	LDR r0, =GPIOA_BASE
 	LDR r1, [r0, #GPIO_ODR]
 	BIC r1, r1, #0x000000CC
 	ORR r1, r1, #0x00000044
 	STR r1, [r0, #GPIO_ODR]
-	BL delay
+	BL delay_check
 	; step 7
 	LDR r0, =GPIOA_BASE
 	LDR r1, [r0, #GPIO_ODR]
 	BIC r1, r1, #0x000000CC
 	ORR r1, r1, #0x00000004
 	STR r1, [r0, #GPIO_ODR]
-	BL delay
+	BL delay_check
 	; step 8
 	LDR r0, =GPIOA_BASE
 	LDR r1, [r0, #GPIO_ODR]
@@ -356,49 +356,49 @@ loop4
 	BIC r1, r1, #0x000000CC
 	ORR r1, r1, #0x00000084
 	STR r1, [r0, #GPIO_ODR]
-	BL delay
+	BL delay_check
 	; step 2
 	LDR r0, =GPIOA_BASE
 	LDR r1, [r0, #GPIO_ODR]
 	BIC r1, r1, #0x000000CC
 	ORR r1, r1, #0x00000004
 	STR r1, [r0, #GPIO_ODR]
-	BL delay
+	BL delay_check
 	; step 3
 	LDR r0, =GPIOA_BASE
 	LDR r1, [r0, #GPIO_ODR]
 	BIC r1, r1, #0x000000CC
 	ORR r1, r1, #0x00000044
 	STR r1, [r0, #GPIO_ODR]
-	BL delay
+	BL delay_check
 	; step 4
 	LDR r0, =GPIOA_BASE
 	LDR r1, [r0, #GPIO_ODR]
 	BIC r1, r1, #0x000000CC
 	ORR r1, r1, #0x00000040
 	STR r1, [r0, #GPIO_ODR]
-	BL delay
+	BL delay_check
 	; step 5
 	LDR r0, =GPIOA_BASE
 	LDR r1, [r0, #GPIO_ODR]
 	BIC r1, r1, #0x000000CC
 	ORR r1, r1, #0x00000048
 	STR r1, [r0, #GPIO_ODR]
-	BL delay
+	BL delay_check
 	; step 6
 	LDR r0, =GPIOA_BASE
 	LDR r1, [r0, #GPIO_ODR]
 	BIC r1, r1, #0x000000CC
 	ORR r1, r1, #0x00000008
 	STR r1, [r0, #GPIO_ODR]
-	BL delay
+	BL delay_check
 	; step 7
 	LDR r0, =GPIOA_BASE
 	LDR r1, [r0, #GPIO_ODR]
 	BIC r1, r1, #0x000000CC
 	ORR r1, r1, #0x00000088
 	STR r1, [r0, #GPIO_ODR]
-	BL delay
+	BL delay_check
 	; step 8
 	LDR r0, =GPIOA_BASE
 	LDR r1, [r0, #GPIO_ODR]
@@ -407,7 +407,7 @@ loop4
 	STR r1, [r0, #GPIO_ODR]
 	BL delay_check
 	
-	SUBS r4, #1
+	SUB r4, #1
 	
 	POP{LR}
 	BX LR
@@ -472,7 +472,7 @@ loop5
 	BIC r1, r1, #0x000000CC
 	ORR r1, r1, #0x00000084
 	STR r1, [r0, #GPIO_ODR]
-	BL delay_check
+	BL delay
 	
 	ADD r8, #1 ; increment counter
 	
@@ -542,7 +542,7 @@ loop6
 	BIC r1, r1, #0x000000CC
 	ORR r1, r1, #0x00000080
 	STR r1, [r0, #GPIO_ODR]
-	BL delay_check
+	BL delay
 	
 	ADD r8, #1
 	CMP r8,r9
@@ -565,6 +565,8 @@ delay_loop2
 	LDR r0, =GPIOB_BASE
 	LDR r1, [r0, #GPIO_IDR]
 	
+	; clear stepper motor bits
+	BIC r1, r1, #0x00000004 ; PB2 LED
 	;; check for each case ;;
 	; station A manual override (PB1)
 	CMP r1, #0x00000002
@@ -643,29 +645,37 @@ emergency
 	
 	;;Turn LED ON FIRST
     LDR r0, =GPIOB_BASE
-    LDR r10,[r0,#GPIO_ODR]
-    MOV r10, #0x0002
-    STR r10,[r0,#GPIO_ODR]
+    LDR r1,[r0,#GPIO_ODR]
+    MOV r1, #0x0002
+    STR r1,[r0,#GPIO_ODR]
    
     ;;;; doors sequence ;;;;
 	MOV r8, #0
 	MOV r9, #0x0096
 	BL doors_open
+
+loop7
+	LDR r0, =GPIOB_BASE
+	LDR r2,[r0,#GPIO_IDR]
+	CMP r2,#0x00000020
+	BEQ loop7
 	
 	MOV r8, #0
 	MOV r9, #0x0096
 	BL doors_close
 	;;;; end doors ;;;;
 	
+	
 	;;Turn LED OFF
     LDR r0, =GPIOB_BASE
-    LDR r10,[r0,#GPIO_ODR]
-    MOV r10, #0x0000
-    STR r10,[r0,#GPIO_ODR]
+    LDR r1,[r0,#GPIO_ODR]
+    MOV r1, #0x0000
+    STR r1,[r0,#GPIO_ODR]
 	
 	POP{LR}
 	BX LR
-
+	
+	
 long_delay
     MOV r7, #0xFFFF
 delay_loop3
